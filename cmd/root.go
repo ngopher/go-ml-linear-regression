@@ -1,17 +1,18 @@
-/*
-Copyright © 2023 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
 	"fmt"
 	"os"
 
+	"first_ml_linear_regression/internal/loader"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
+var (
+	cfgFile  string
+	dataFile string
+)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -25,7 +26,22 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	Run: serve,
+}
+
+func serve(cmd *cobra.Command, args []string) {
+	// Load housing data
+	houses, err := loader.LoadData(dataFile)
+	if err != nil {
+		fmt.Println("Error loading data")
+		return
+	}
+
+	for _, house := range houses {
+		price := loader.PredictPrice(house.Price, house.Rooms)
+
+		fmt.Printf("Predicted price for %.0f sqft %.0f br house is $%.0f\n", house.Size, house.Rooms, price)
+	}
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -35,6 +51,7 @@ func Execute() {
 	if err != nil {
 		os.Exit(1)
 	}
+
 }
 
 func init() {
@@ -44,7 +61,8 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "./.env", "config file (default is $HOME/.first_ml_linear_regression.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "./.env", "config file (default is ./.env)")
+	rootCmd.PersistentFlags().StringVar(&dataFile, "data", "./data.csv", "data file (default is ./data.scv)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
